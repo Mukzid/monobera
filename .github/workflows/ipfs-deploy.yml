@@ -1,8 +1,8 @@
 name: Deploy on Fleek
 
 on:
-  # push:
-  #   branches: [ "v2" ]
+  push:
+    branches: [ "v2" ]
   workflow_dispatch:
 
 jobs:  
@@ -29,7 +29,7 @@ jobs:
     - name: Use Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 22.12
+        node-version: '22.12'
         cache: 'pnpm'
 
     - name: Install
@@ -43,6 +43,7 @@ jobs:
         NODE_OPTIONS: "--max_old_space_size=8192"
       run: pnpm run build:ipfs
       
+    # Uncomment if needed for other deployments
     # - name: Deploy Berps
     #   run: cd apps/perp && fleek sites deploy
 
@@ -54,3 +55,4 @@ jobs:
 
     - name: Deploy Honey
       run: cd apps/honey && fleek sites deploy
+
