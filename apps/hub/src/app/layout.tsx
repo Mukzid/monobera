@@ -33,41 +33,36 @@ export const metadata: Metadata = {
     default: hubName,
   },
 };
+
 const PostHogPageView = dynamic(() => import("./PostHogPageView"), {
   ssr: false,
 });
+
+async function fetchTokenList(url: string): Promise<any> {
+  if (url.startsWith("http")) {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch token list: ${response.statusText}`);
+    }
+    return response.json();
+  } else {
+    const tokenListPath = path.join(process.cwd(), "public", url);
+    if (existsSync(tokenListPath)) {
+      const fileContent = readFileSync(tokenListPath, "utf8");
+      return JSON.parse(fileContent);
+    } else {
+      throw new Error(`Token list file not found at: ${tokenListPath}`);
+    }
+  }
+}
 
 export default async function RootLayout(props: { children: React.ReactNode }) {
   let fetchedTokenList = null;
 
   try {
-    if (tokenListUrl.startsWith("http")) {
-      const response = await fetch(tokenListUrl);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch token list: ${response.statusText}`);
-      }
-      fetchedTokenList = await response.json();
-    } else {
-      const publicPath = path.join(process.cwd(), "public");
-      const tokenListPath = path.join(publicPath, tokenListUrl);
-
-      // Check if public directory and file exist
-      if (existsSync(tokenListPath)) {
-        try {
-          const fileContent = readFileSync(tokenListPath, "utf8");
-          fetchedTokenList = JSON.parse(fileContent);
-        } catch (error: unknown) {
-          const errorMessage =
-            error instanceof Error ? error.message : "Unknown error";
-          console.error(`Error parsing token list file: ${errorMessage}`);
-        }
-      } else {
-        console.error(`Token list file not found at: ${tokenListPath}`);
-      }
-    }
+    fetchedTokenList = await fetchTokenList(tokenListUrl);
   } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error(`Error loading token list: ${errorMessage}`);
   }
 
@@ -86,28 +81,18 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
             a.appendChild(r);
         })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');`,
         }}
-      />{" "}
-      <body
-        className={cn("min-h-screen font-sans antialiased", fontSans.variable)}
-      >
+      />
+      <body className={cn("min-h-screen font-sans antialiased", fontSans.variable)}>
         <Providers content={fetchedTokenList}>
           <TermOfUseModal />
-
           <PostHogPageView />
-          {/* Note: This div previously had overflow-hidden, but it was removed as it interferes with sticky elements */}
-          <div className="relative flex min-h-screen w-full flex-col ">
+          <div className="relative flex min-h-screen w-full flex-col">
             <div className="z-[100]">
               <Toaster position="bottom-right" />
             </div>
             <div className="z-10 flex-1">
               <Header navItems={navItems} appName={hubName} hideTheme />
-              <MainWithBanners
-                // mt-8 should probably be removed
-                className="mt-8"
-                // paddingTop={150}
-                // multiplier={50}
-                appName={hubName}
-              >
+              <MainWithBanners className="mt-8" appName={hubName}>
                 {props.children}
               </MainWithBanners>
             </div>
