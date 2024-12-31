@@ -10,22 +10,21 @@ const env = program.args[0];
 
 console.log("Copying files", env);
 
-if (fs.existsSync(path.resolve(process.cwd(), "secrets", `.env.${env}`))) {
-  if (fs.existsSync(path.resolve(process.cwd(), ".env"))) {
-    fs.unlinkSync(path.resolve(process.cwd(), ".env"));
+const linkEnvFile = (source) => {
+  const target = path.resolve(process.cwd(), ".env");
+  if (fs.existsSync(target)) {
+    fs.unlinkSync(target);
   }
-  fs.symlinkSync(
-    path.resolve(process.cwd(), "secrets", `.env.${env}`),
-    path.resolve(process.cwd(), ".env"),
-  );
-} else if (fs.existsSync(path.resolve(process.cwd(), `.env.${env}`))) {
-  if (fs.existsSync(path.resolve(process.cwd(), ".env"))) {
-    fs.unlinkSync(path.resolve(process.cwd(), ".env"));
-  }
-  fs.symlinkSync(
-    path.resolve(process.cwd(), `.env.${env}`),
-    path.resolve(process.cwd(), ".env"),
-  );
+  fs.symlinkSync(source, target);
+};
+
+const secretsEnvPath = path.resolve(process.cwd(), "secrets", `.env.${env}`);
+const envPath = path.resolve(process.cwd(), `.env.${env}`);
+
+if (fs.existsSync(secretsEnvPath)) {
+  linkEnvFile(secretsEnvPath);
+} else if (fs.existsSync(envPath)) {
+  linkEnvFile(envPath);
 } else {
   throw new Error(`No env file found for ${env}`);
 }
