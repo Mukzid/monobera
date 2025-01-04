@@ -56,7 +56,7 @@ export const useCollateralsRates = (
 
   return {
     ...swrResponse,
-    refresh: () => void swrResponse.mutate(),
+    refresh: () => swrResponse.mutate(),
     getCollateralRate,
   };
 };
